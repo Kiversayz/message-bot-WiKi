@@ -1,0 +1,1 @@
+print(isinstance(15,int))
