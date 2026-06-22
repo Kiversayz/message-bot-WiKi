@@ -7,13 +7,16 @@ class GameNumber:
         self.lose_tries=5
 
 
-    def _is_first_game(self,player_id: int) -> bool:
+    def is_first_game(self, player_id: int) -> bool:
+        """ Проверка, играл ли данный игрок ранее"""
         if player_id not in self._game_data:
             return True
         return False
 
     def start_new_game(self, player_id: int, chat_id: int)-> int:
-        if self._is_first_game(player_id):
+        """Начала игры, базавая установка для того кто не играл ранее
+        и для того кто уже играл ранее"""
+        if self.is_first_game(player_id):
             self._game_data[player_id] = {
                 'number': random.randint(1, 100),
                 'chat_id': chat_id,
@@ -30,41 +33,55 @@ class GameNumber:
 
         return self._game_data[player_id]['number']
 
+    def get_stats(self, player_id: int) -> dict:
+        return self._game_data[player_id]
+
     def check_game_status(self,player_id: int) -> bool:
-        return self._game_data[player_id]['game_status']
+        """Проверка статуса игры"""
+        if self.is_first_game(player_id):
+            return False
+        else:
+            return self._game_data[player_id]['game_status']
 
     def _check_send_number(self,player_id: int, number: int) -> bool:
+        """Сранвнение введеного числа с загаданным"""
         self._game_data[player_id]['last_send_number'] = number
         return self._game_data[player_id]['number'] == number
 
     def _check_send_number_more (self, player_id: int, number: int) -> bool:
-        if self._game_data[player_id]['last_send_number'] < number:
-            return True
-        return False
+        """Проверка введенного числа, больше ли загаданного?"""
+        return self._game_data[player_id]['number'] < number
 
     def _check_lose(self,player_id: int) -> bool:
+        """Проверка - проиграл ли игрок?"""
         return  self._game_data[player_id]['tries'] == self.lose_tries
 
     def _add_tries (self,player_id: int) -> None:
+        """Добавлаем +1 к счетчику попыток"""
         self._game_data[player_id]['tries'] += 1
 
-    def _end_game (self,player_id: int) -> None:
+    def end_game (self,player_id: int) -> None:
+        """Конец игры"""
         self._game_data[player_id]['tries'] = 0
         self._game_data[player_id]['game_status'] = False
         self._game_data[player_id]['last_send_number'] = None
 
     def _end_game_lose(self,player_id: int) -> None:
-        self._end_game(player_id)
+        """Проигрышь"""
+        self.end_game(player_id)
         self._game_data[player_id]['losses'] += 1
 
     def _end_game_win(self,player_id: int) -> None:
-        self._end_game(player_id)
+        """Выигрышь"""
+        self.end_game(player_id)
         self._game_data[player_id]['wins'] += 1
 
     def last_send_number(self,player_id: int) -> int:
+        """Последний введеный номер - пользователем"""
         return self._game_data[player_id]['last_send_number']
 
     def resume_game (self,player_id: int, send_number: int) -> str | None:
+        """Продолжение игры после старта - уведомлениея о состоянии игры"""
         if not isinstance(send_number,int):
             return 'Данное знаение не является числом, пожалуйста введите число от 1 до 100. \nЕсли хотите закончить игру, введите "/close".'
         elif send_number > 100 or send_number < 1:
@@ -87,7 +104,7 @@ class GameNumber:
                     text_end += 'Меньше!'
                 else:
                     text_end += 'Больше!'
-                return f'Не угада! {text_end}'
+                return f'Не угадал! {text_end}'
 
 
 
