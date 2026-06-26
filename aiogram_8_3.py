@@ -1,10 +1,8 @@
 from aiogram import Bot, Dispatcher, F
 from aiogram.filters import Command, CommandStart
-from aiogram.fsm.context import FSMContext
 from aiogram.types import Message
-from idna.uts46data import uts46_starts
 
-from config import *
+from configs.config import *
 from game_number import GameNumber
 
 

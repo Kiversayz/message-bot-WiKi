@@ -3,10 +3,10 @@
 
 """
 
-from aiogram import Bot, Dispatcher, F
+from aiogram import Bot, Dispatcher
 from aiogram.filters import Command
 from aiogram.types import Message
-from config import *
+from configs.config import *
 from game_number import GameNumber
 
 

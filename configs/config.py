@@ -9,3 +9,6 @@ API_CORE_TG = os.getenv('API_CORE_TG')
 API_URL_TG = os.getenv('API_URL_TG')
 API_CATS_URL = 'https://api.thecatapi.com/v1/images/search'
 BASE_URL = f'{API_URL_TG}{TOKEN_ACCESS_API_TG_BOT}'
+
+CONFLUENCE_BASE_URL = os.getenv('CONFLUENCE_BASE_URL')
+CONFLUENCE_TOKEN = os.getenv('CONFLUENCE_TOKEN')

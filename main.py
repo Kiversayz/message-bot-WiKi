@@ -2,10 +2,10 @@
 Регистрация команд или же тригеры для бота на сообщения пользователя.
 """
 
-from aiogram import Bot, Dispatcher, F
+from aiogram import Bot, Dispatcher
 from aiogram.filters import Command
 from aiogram.types import Message
-from config import *
+from configs.config import *
 
 # Вместо BOT TOKEN HERE нужно вставить токен вашего бота, полученный у @BotFather
 BOT_TOKEN = TOKEN_ACCESS_API_TG_BOT
