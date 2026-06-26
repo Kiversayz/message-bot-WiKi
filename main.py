@@ -5,7 +5,7 @@
 from aiogram import Bot, Dispatcher
 from aiogram.filters import Command
 from aiogram.types import Message
-from configs.config import *
+from core.config import *
 
 # Вместо BOT TOKEN HERE нужно вставить токен вашего бота, полученный у @BotFather
 BOT_TOKEN = TOKEN_ACCESS_API_TG_BOT
