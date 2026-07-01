@@ -1,76 +1,50 @@
-"""
-Регистрация команд или же тригеры для бота на сообщения пользователя.
-"""
+import asyncio
+import logging
 
 from aiogram import Bot, Dispatcher
-from aiogram.filters import Command
-from aiogram.types import Message
-from core.config import *
+from aiogram.fsm.storage.memory import MemoryStorage
 
-# Вместо BOT TOKEN HERE нужно вставить токен вашего бота, полученный у @BotFather
-BOT_TOKEN = TOKEN_ACCESS_API_TG_BOT
-
-# Создаем объекты бота и диспетчера
-bot = Bot(token=BOT_TOKEN)
-dp = Dispatcher()
+from core.config import settings
+from core.database import engine, Base
+from services.confluence.client import ConfluenceClient
 
 
-# Этот хэндлер будет срабатывать на команду "/start"
-@dp.message(Command(commands="start"))
-async def process_start_command(message: Message):
-    await message.answer('Привет!\nМеня зовут Эхо-бот!\nНапиши мне что-нибудь')
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s | %(levelname)-8s | %(name)s | %(message)s",
+    datefmt="%Y-%m-%d %H:%M:%S",
+)
+logger = logging.getLogger(__name__)
 
 
-# Этот хэндлер будет срабатывать на команду "/help"
-@dp.message(Command(commands="help"))
-async def process_help_command(message: Message):
-    await message.answer(
-        'Напиши мне что-нибудь и в ответ '
-        'я пришлю тебе твое сообщение'
+async def main():
+    logger.info("Запуск бота...")
+
+    bot = Bot(token=settings.BOT_TOKEN)
+    dp = Dispatcher(storage=MemoryStorage())
+
+    confluence_client = ConfluenceClient(
+        base_url=settings.CONFLUENCE_BASE_URL,
+        token=settings.CONFLUENCE_TOKEN,
     )
+    dp["confluence_client"] = confluence_client
 
+    # Создание таблиц в БД при запуске
+    async with engine.begin() as conn:
+        await conn.run_sync(Base.metadata.create_all)
 
-"""
-# Альтернативный вид записи того же самого что и выше:
-# Этот хэндлер будет срабатывать на команду "/start"
-async def process_start_command(message: Message):
-    await message.answer('Привет!\nМеня зовут Эхо-бот!\nНапиши мне что-нибудь')
-
-
-# Этот хэндлер будет срабатывать на команду "/help"
-async def process_help_command(message: Message):
-    await message.answer(
-        'Напиши мне что-нибудь и в ответ '
-        'я пришлю тебе твое сообщение'
-    )
-
-
-# Этот хэндлер будет срабатывать на любые ваши текстовые сообщения,
-# кроме команд "/start" и "/help"
-async def send_echo(message: Message):
-    await message.reply(text=message.text)
-
-# Регистрируем хэндлеры
-dp.message.register(process_start_command, Command(commands='start'))
-dp.message.register(process_help_command, Command(commands='help'))
-dp.message.register(send_echo)
-"""
-
-
-# Этот хэндлер будет срабатывать на любые ваши сообщения,
-# кроме команд "/start" и "/help"
-@dp.message()
-async def send_echo(message: Message):
-    print(message.model_dump_json(indent=4, exclude_none=True))
     try:
-        await message.send_copy(chat_id=message.chat.id)
-        await message.answer(message.model_dump_json(indent=4, exclude_none=True))
-    except TypeError:
-        await message.reply(
-            text='Данный тип апдейтов не поддерживается '
-                 'методом send_copy'
-        )
+        logger.info("Бот запущен. Ожидание сообщений...")
+        await dp.start_polling(bot)
+    finally:
+        logger.info("Остановка бота...")
+        await confluence_client.close()
+        await engine.dispose()
+        await bot.session.close()
 
 
-if __name__ == '__main__':
-    dp.run_polling(bot)
+if __name__ == "__main__":
+    try:
+        asyncio.run(main())
+    except (KeyboardInterrupt, SystemExit):
+        logger.info("Бот остановлен пользователем.")
