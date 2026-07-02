@@ -107,6 +107,13 @@ class GameNumber:
                 return f'Не угадал! {text_end}'
 
 
+# Синглтон: один экземпляр игры на всё приложение
+_game_instance: GameNumber | None = None
 
 
-
+def get_game_instance() -> GameNumber:
+    """Возвращает единственный экземпляр GameNumber."""
+    global _game_instance
+    if _game_instance is None:
+        _game_instance = GameNumber()
+    return _game_instance
