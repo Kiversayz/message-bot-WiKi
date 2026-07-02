@@ -6,6 +6,7 @@ from aiogram.fsm.storage.memory import MemoryStorage
 
 from core.config import settings
 from core.database import engine, Base
+from bot.handlers.game import router as game_router
 from bot.handlers.common import router as common_router
 from services.confluence.client import get_confluence_client
 
@@ -23,6 +24,7 @@ async def main():
     bot = Bot(token=settings.BOT_TOKEN)
     dp = Dispatcher(storage=MemoryStorage())
 
+    dp.include_router(game_router)
     dp.include_router(common_router)
 
     async with engine.begin() as conn:
