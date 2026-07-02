@@ -14,6 +14,7 @@ class Settings(BaseSettings):
     # Confluence
     CONFLUENCE_BASE_URL: str = Field(..., description="URL Confluence (например, https://wiki.company.com)")
     CONFLUENCE_TOKEN: str = Field(..., description="Personal Access Token для Confluence API")
+    CONFLUENCE_PAGE_ID: str  = Field(..., description="pageId=... конкретной статьи ")
 
     # Application
     DEBUG: bool = Field(default=False)

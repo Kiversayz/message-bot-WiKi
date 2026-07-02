@@ -1,6 +1,5 @@
 from sqlalchemy import select
-from sqlalchemy.ext.asyncio import AsyncSession
-
+from sqlalchemy.exc import IntegrityError
 from core.database import async_session
 from models import User
 
@@ -16,22 +15,23 @@ async def get_or_create_user(
     или создаёт нового, если такого нет в БД.
     """
     async with async_session() as session:
-        # Ищем пользователя
-        result = await session.execute(
-            select(User).where(User.telegram_id == telegram_id)
+        # Пытаемся создать сразу (оптимистичный подход)
+        user = User(
+            telegram_id=telegram_id,
+            username=username,
+            first_name=first_name,
+            last_name=last_name,
         )
-        user = result.scalar_one_or_none()
+        session.add(user)
 
-        if user is None:
-            # [Логика] Создаём нового пользователя
-            user = User(
-                telegram_id=telegram_id,
-                username=username,
-                first_name=first_name,
-                last_name=last_name,
-            )
-            session.add(user)
+        try:
             await session.commit()
-            await session.refresh(user)  # Обновляем объект, чтобы получить id
-
-        return user
+            await session.refresh(user)
+            return user
+        except IntegrityError:
+            # Если пользователь уже существует - откатываем и ищем
+            await session.rollback()
+            result = await session.execute(
+                select(User).where(User.telegram_id == telegram_id)
+            )
+            return result.scalar_one()

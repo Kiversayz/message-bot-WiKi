@@ -1,6 +1,7 @@
 import logging
 import httpx
 from typing import Optional, Dict, Any
+from core.config import settings
 
 
 logger = logging.getLogger(__name__)
@@ -68,3 +69,21 @@ class ConfluenceClient:
     async def search(self, cql: str, limit: int = 10) -> Optional[Dict[str, Any]]:
         """Поиск по ключевым словам"""
         return await self._request("GET", "content/search", params={"cql": cql, "limit": limit})
+
+
+# Синглтон: один клиент на всё приложение
+_client_instance: ConfluenceClient | None = None
+
+
+def get_confluence_client() -> ConfluenceClient:
+    """
+    Возвращает единственный экземпляр ConfluenceClient.
+    При первом вызове создаёт его, при последующих — возвращает тот же.
+    """
+    global _client_instance
+    if _client_instance is None:
+        _client_instance = ConfluenceClient(
+            base_url=settings.CONFLUENCE_BASE_URL,
+            token=settings.CONFLUENCE_TOKEN
+        )
+    return _client_instance

@@ -6,8 +6,8 @@ from aiogram.fsm.storage.memory import MemoryStorage
 
 from core.config import settings
 from core.database import engine, Base
-from services.confluence.client import ConfluenceClient
-
+from bot.handlers.common import router as common_router
+from services.confluence.client import get_confluence_client
 
 logging.basicConfig(
     level=logging.INFO,
@@ -23,13 +23,8 @@ async def main():
     bot = Bot(token=settings.BOT_TOKEN)
     dp = Dispatcher(storage=MemoryStorage())
 
-    confluence_client = ConfluenceClient(
-        base_url=settings.CONFLUENCE_BASE_URL,
-        token=settings.CONFLUENCE_TOKEN,
-    )
-    dp["confluence_client"] = confluence_client
+    dp.include_router(common_router)
 
-    # Создание таблиц в БД при запуске
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
 
@@ -38,7 +33,9 @@ async def main():
         await dp.start_polling(bot)
     finally:
         logger.info("Остановка бота...")
-        await confluence_client.close()
+        # ← Закрываем клиент-синглтон
+        client = get_confluence_client()
+        await client.close()
         await engine.dispose()
         await bot.session.close()
 

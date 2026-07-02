@@ -1,4 +1,4 @@
-from sqlalchemy import String, BigInteger, Integer, DateTime
+from sqlalchemy import String, BigInteger, Integer, DateTime, Text
 from sqlalchemy.orm import Mapped, mapped_column
 from core.database import Base
 import datetime
@@ -13,3 +13,4 @@ class PageCache(Base):
     version: Mapped[int] = mapped_column(Integer)
     content_hash: Mapped[str | None] = mapped_column(String(32),nullable=True)
     last_fetched_at: Mapped[datetime.datetime] = mapped_column(DateTime(timezone=True))
+    parsed_content: Mapped[str | None] = mapped_column(Text, nullable=True)
